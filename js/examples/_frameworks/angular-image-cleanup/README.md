@@ -1,6 +1,6 @@
 # Angular / Rive image cleanup reproduction
 
-[Open in StackBlitz](https://stackblitz.com/github/MaximeSarratoBetclic/rive-wasm/tree/codex/angular-image-cleanup-repro/js/examples/_frameworks/angular-image-cleanup?file=src/app/rive-page/rive-page.component.ts)
+[Open in StackBlitz](https://stackblitz.com/github/MaximeSarratoBetclic/rive-wasm/tree/58befedbc93a9db2df53c7896d1b7db15e1e4053/js/examples/_frameworks/angular-image-cleanup?file=src/app/rive-page/rive-page.component.ts)
 
 This standalone Angular 22 example exercises real router navigation and `ngOnDestroy` with a direct WebGL2 renderer (`useOffscreenRenderer: false`). It complements [rive-wasm PR #428](https://github.com/rive-app/rive-wasm/pull/428).
 
