@@ -1,4 +1,5 @@
 const assert = require("node:assert/strict");
+const fs = require("node:fs/promises");
 const path = require("node:path");
 const { chromium } = require("playwright");
 const webpack = require("webpack");
@@ -41,7 +42,29 @@ async function collectImage(page, session) {
   assert.fail("The image wrapper was not collected; the test is inconclusive");
 }
 
-async function run(browser, scenario) {
+async function renderScreenshot(page, directory, name) {
+  await page.evaluate(async () => {
+    const canvas = document.getElementById("rive");
+    canvas.width = canvas.width;
+    animation.startRendering();
+    await new Promise((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(resolve)),
+    );
+    animation.stopRendering();
+  });
+  return page.locator("#rive").screenshot({
+    path: path.join(directory, `${name}.png`),
+  });
+}
+
+async function run(browser, scenario, iteration) {
+  const directory = path.join(
+    output,
+    "screenshots",
+    scenario.name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+    String(iteration),
+  );
+  await fs.mkdir(directory, { recursive: true });
   const page = await browser.newPage();
   const errors = [];
   page.on("pageerror", (error) => errors.push(error.message));
@@ -78,7 +101,7 @@ async function run(browser, scenario) {
     });
     await page.goto("https://rive.test/");
     await page.addScriptTag({ url: "https://rive.test/rive.js" });
-    await page.evaluate(async ({ releases }) => {
+    await page.evaluate(async ({ releaseBeforeRender }) => {
       rive.RuntimeLoader.setWasmUrl("https://rive.test/rive.wasm");
       rive.RuntimeLoader.setWasmFallbackUrl(null);
       window.runtime = await rive.RuntimeLoader.awaitInstance();
@@ -105,7 +128,7 @@ async function run(browser, scenario) {
               window.retainedImage = image;
               window.collectionWitness.register(image, "image");
               asset.setRenderImage(image);
-              for (let i = 0; i < releases; i++) image.unref();
+              if (releaseBeforeRender) image.unref();
             });
             return true;
           },
@@ -122,14 +145,13 @@ async function run(browser, scenario) {
           (image) => image.complete && image.naturalWidth > 0,
         ),
     );
-    await page.evaluate(async () => {
-      animation.startRendering();
-      await new Promise((resolve) =>
-        requestAnimationFrame(() => requestAnimationFrame(resolve)),
-      );
-      animation.stopRendering();
-    });
-    const screenshot = await page.locator("#rive").screenshot();
+    const screenshot = await renderScreenshot(
+      page,
+      directory,
+      scenario.releaseBeforeRender
+        ? "first-render-after-unref"
+        : "before-unref",
+    );
     const redPixels = await page.evaluate(
       async (bytes) => {
         const bitmap = await createImageBitmap(
@@ -158,7 +180,16 @@ async function run(browser, scenario) {
     );
     assert.ok(
       redPixels > 100,
-      "The assigned image must remain visible after unref",
+      "The assigned image must be visible in the initial render",
+    );
+    await page.evaluate((releases) => {
+      for (let i = 0; i < releases; i++) window.retainedImage.unref();
+    }, scenario.releases);
+    const afterUnref = await renderScreenshot(page, directory, "after-unref");
+    assert.deepEqual(
+      afterUnref,
+      screenshot,
+      `${scenario.name}: a fresh render after unref must match the initial image`,
     );
     const session = await page.context().newCDPSession(page);
     if (scenario.collectBeforeCleanup) {
@@ -166,6 +197,12 @@ async function run(browser, scenario) {
         window.retainedImage = undefined;
       });
       await collectImage(page, session);
+      const afterGC = await renderScreenshot(page, directory, "after-gc");
+      assert.deepEqual(
+        afterGC,
+        screenshot,
+        "A fresh render after GC must retain the image owned by the asset",
+      );
     }
     await page.evaluate(async () => {
       const instance = animation;
@@ -221,6 +258,11 @@ async function run(browser, scenario) {
             collectBeforeCleanup: true,
           },
           { name: "explicit unref, then cleanup, then GC", releases: 1 },
+          {
+            name: "unref before the first render, then cleanup, then GC",
+            releases: 0,
+            releaseBeforeRender: true,
+          },
           { name: "repeated unref, then cleanup, then GC", releases: 2 },
           {
             name: "no FinalizationRegistry",
@@ -239,7 +281,7 @@ async function run(browser, scenario) {
           );
         });
         const pixels = await Promise.race([
-          run(browser, scenario),
+          run(browser, scenario, i + 1),
           timeout,
         ]).finally(() => clearTimeout(deadline));
         expectedPixels ??= pixels;
