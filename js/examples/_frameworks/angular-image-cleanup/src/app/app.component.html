@@ -1,0 +1,51 @@
+<main>
+  <p class="eyebrow">Rive · WebGL2 · Angular lifecycle</p>
+  <h1>Image cleanup reproduction</h1>
+  <p>
+    Render an image, navigate away, then collect garbage. The image wrapper is deliberately kept
+    alive until the renderer is destroyed to reproduce the failing order.
+  </p>
+  <nav aria-label="Runtime version">
+    <a href="?runtime=published#/animation">Published 2.42.0</a>
+    <a href="?runtime=baseline#/animation">Unpatched sources</a>
+    <a href="?runtime=fixed#/animation">PR #428 fix</a>
+  </nav>
+  <p><strong>Runtime:</strong> {{ reproduction.variant.label }}</p>
+  <p>
+    <strong>Status:</strong> <span data-testid="stage">{{ reproduction.stage() }}</span>
+  </p>
+  <router-outlet />
+  <section aria-labelledby="gc-title">
+    <h2 id="gc-title">Confirm garbage collection</h2>
+    <p>
+      After navigating away, open Chrome DevTools → Memory → Collect garbage. On StackBlitz, open
+      the preview in its own tab first. Collection timing is otherwise controlled by the browser.
+    </p>
+    <p>
+      <strong>Collected wrappers:</strong>
+      <span data-testid="collected">{{ reproduction.collected() }}</span>
+    </p>
+    <p>
+      A zero error count is inconclusive until the wrapper has been collected. The automated
+      Playwright test forces GC and checks this counter.
+    </p>
+  </section>
+  <section aria-labelledby="errors-title">
+    <h2 id="errors-title">
+      Errors <span data-testid="error-count">{{ reproduction.errors().length }}</span>
+    </h2>
+    <ul class="errors" data-testid="errors">
+      @for (error of reproduction.errors(); track $index) {
+        <li>{{ error }}</li>
+      }
+    </ul>
+  </section>
+  <section aria-labelledby="events-title">
+    <h2 id="events-title">Lifecycle events</h2>
+    <ol data-testid="events">
+      @for (event of reproduction.events(); track $index) {
+        <li>{{ event }}</li>
+      }
+    </ol>
+  </section>
+</main>

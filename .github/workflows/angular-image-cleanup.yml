@@ -1,0 +1,37 @@
+name: Angular image cleanup reproduction
+
+on:
+  push:
+    branches:
+      - codex/angular-image-cleanup-repro
+    paths:
+      - 'js/examples/_frameworks/angular-image-cleanup/**'
+      - '.github/workflows/angular-image-cleanup.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  angular-lifecycle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: js/examples/_frameworks/angular-image-cleanup
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: js/examples/_frameworks/angular-image-cleanup/package-lock.json
+      - run: npm ci
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:lifecycle
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: angular-image-cleanup-screenshots
+          path: js/examples/_frameworks/angular-image-cleanup/test-results/
+          retention-days: 14

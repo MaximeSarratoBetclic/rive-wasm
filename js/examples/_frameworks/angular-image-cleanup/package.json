@@ -1,0 +1,37 @@
+{
+  "name": "angular-image-cleanup",
+  "version": "0.0.0",
+  "scripts": {
+    "ng": "ng",
+    "prepare:rive": "node scripts/prepare-rive.mjs",
+    "start": "npm run prepare:rive && ng serve --host 0.0.0.0",
+    "build": "npm run prepare:rive && ng build",
+    "test:lifecycle": "node scripts/test-lifecycle.mjs"
+  },
+  "private": true,
+  "packageManager": "npm@11.16.0",
+  "dependencies": {
+    "@angular/common": "22.1.0",
+    "@angular/compiler": "22.1.0",
+    "@angular/core": "22.1.0",
+    "@angular/forms": "22.1.0",
+    "@angular/platform-browser": "22.1.0",
+    "@angular/router": "22.1.0",
+    "@rive-app/webgl2": "2.42.0",
+    "rxjs": "7.8.0",
+    "tslib": "2.3.0"
+  },
+  "devDependencies": {
+    "@angular/build": "22.1.8",
+    "@angular/cli": "22.1.8",
+    "@angular/compiler-cli": "22.1.0",
+    "@rive-app/webgl2-advanced": "2.42.2",
+    "esbuild": "0.28.2",
+    "playwright": "1.62.1",
+    "prettier": "3.8.1",
+    "typescript": "6.0.2"
+  },
+  "stackblitz": {
+    "startCommand": "npm start"
+  }
+}

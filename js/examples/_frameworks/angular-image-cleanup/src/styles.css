@@ -1,0 +1,55 @@
+:root {
+  font-family: system-ui, sans-serif;
+  color: #182b3a;
+  background: #f5f7fa;
+}
+body {
+  margin: 0;
+}
+main {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 32px 24px;
+}
+h1 {
+  font-size: 2rem;
+  margin-top: 0;
+}
+p,
+li {
+  line-height: 1.6;
+}
+.eyebrow {
+  color: #546878;
+  font-size: 0.85rem;
+}
+nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 24px 0;
+}
+a {
+  color: #135fa1;
+}
+nav a,
+.button {
+  display: inline-block;
+  padding: 10px 16px;
+  border: 1px solid #b7c7d6;
+  border-radius: 6px;
+  background: white;
+  text-decoration: none;
+}
+section {
+  border-top: 1px solid #d4dee6;
+  padding: 16px 0;
+}
+canvas {
+  display: block;
+  max-width: 100%;
+}
+.errors {
+  color: #a51c30;
+  overflow-wrap: anywhere;
+}
